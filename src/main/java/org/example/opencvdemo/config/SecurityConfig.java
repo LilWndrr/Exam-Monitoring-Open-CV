@@ -50,7 +50,7 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .maximumSessions(10) // Allow multiple sessions
+                        .maximumSessions(2) // Allow multiple sessions
                         .maxSessionsPreventsLogin(false)
                 )
                 .securityContext(securityContext -> securityContext

@@ -2,6 +2,8 @@ package org.example.opencvdemo.services;
 
 import org.example.opencvdemo.entity.ExamIds;
 import org.example.opencvdemo.repository.ExamRepo;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +20,14 @@ public class ExamService {
     }
 
 
-    //@Cacheable("exams")
+    @Cacheable("exams")
     public List<ExamIds> getALl(){
         return examRepo.findAll();
+    }
+
+
+    @CacheEvict(value = "exams",allEntries=true)
+    public ExamIds add(){
+        return examRepo.save(new ExamIds());
     }
 }

@@ -53,7 +53,7 @@ public class CameraController {
     @GetMapping("admin/getByUserIdAndExamAd")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<Snapshot>> getByUserIdAndExamAd(Long userId, Long examAdId){
-        return ResponseEntity.ok(snapshotRepo.findByUserIdAndCourseId(userId,examAdId.toString()));
+        return ResponseEntity.ok(cameraService.getByUserIdAndExamId(userId,examAdId.toString()));
     }
 
 

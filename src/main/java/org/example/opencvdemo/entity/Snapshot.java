@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.security.Timestamp;
 import java.util.Date;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class Snapshot {
+public class Snapshot implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

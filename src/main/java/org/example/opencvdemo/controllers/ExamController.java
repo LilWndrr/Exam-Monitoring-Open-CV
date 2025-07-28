@@ -5,6 +5,7 @@ import org.example.opencvdemo.entity.ExamIds;
 import org.example.opencvdemo.services.ExamService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,5 +26,10 @@ public class ExamController {
 
     public ResponseEntity<List<ExamIds>> getALl(){
         return ResponseEntity.ok(examService.getALl());
+    }
+
+    @PostMapping("add")
+    public ResponseEntity<ExamIds> add(){
+        return ResponseEntity.ok(examService.add());
     }
 }

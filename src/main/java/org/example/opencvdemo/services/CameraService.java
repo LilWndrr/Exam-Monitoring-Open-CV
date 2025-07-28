@@ -1,7 +1,5 @@
 package org.example.opencvdemo.services;
 
-import jakarta.annotation.PostConstruct;
-import org.apache.catalina.LifecycleState;
 import org.example.opencvdemo.entity.Snapshot;
 import org.example.opencvdemo.entity.User;
 import org.example.opencvdemo.repository.SnapshotRepo;
@@ -10,22 +8,19 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
+
 import org.opencv.videoio.VideoCapture;
-import org.springframework.security.core.context.SecurityContextHolder;
+
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Timestamp;
-import java.sql.Time;
+
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -64,13 +59,15 @@ public class CameraService {
         System.out.println("lowerBodyClassifier loaded: " + !lowerBodyClassifier.empty());
     }
 
-    public List<Snapshot> getByUserIdAndExamId(Long userId, String examId) {
 
+    @Cacheable(value = "snapshots", key = "#userId + '-' + #examId")
+    public List<Snapshot> getByUserIdAndExamId(Long userId, String examId) {
+        System.out.println(">> Hitting the database...");
         return snapshotRepo.findByUserIdAndCourseId(userId, examId);
     }
 
 
-
+    @Cacheable(value = "allSnapshots", key = "#userId + '-' + #examId")
     public List<Snapshot> getAll(){
         return snapshotRepo.findAll();
     }
@@ -163,6 +160,7 @@ public class CameraService {
     public boolean   faceDetect(Mat frame) {
         MatOfRect faceDetections = new MatOfRect(); //Face detection started
         faceClassifier.detectMultiScale(frame, faceDetections);
+
 
         int facenum = faceDetections.toArray().length;
         System.out.println("Faces detected: " + facenum);
