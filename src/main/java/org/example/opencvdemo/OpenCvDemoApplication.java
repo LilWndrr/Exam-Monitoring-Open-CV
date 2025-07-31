@@ -14,7 +14,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class OpenCvDemoApplication {
 
     static {
-        System.load("C:\\Users\\Seyfullah\\Documents\\OpenCv\\opencv\\build\\java\\x64\\opencv_java4120.dll");
+        System.load("C:\\Users\\Seyfullah\\Documents\\openCV1\\install\\java\\opencv_java4120.dll");
+       // System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         System.out.println("OpenCv Loaded Version:" + Core.VERSION);
     }
 

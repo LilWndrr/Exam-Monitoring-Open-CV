@@ -1,6 +1,7 @@
 package org.example.opencvdemo.services;
 
 import org.example.opencvdemo.entity.User;
+import org.example.opencvdemo.exception.ApiRequestException;
 import org.example.opencvdemo.repository.UserRepo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,7 +26,7 @@ public class CustomUserDetailsService implements org.springframework.security.co
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+            throw new ApiRequestException("User not found");
         }
 
         return new org.springframework.security.core.userdetails.User(user.getUsername(),

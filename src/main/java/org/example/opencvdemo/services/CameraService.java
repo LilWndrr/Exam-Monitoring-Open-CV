@@ -2,18 +2,24 @@ package org.example.opencvdemo.services;
 
 import org.example.opencvdemo.entity.Snapshot;
 import org.example.opencvdemo.entity.User;
+import org.example.opencvdemo.exception.ApiRequestException;
 import org.example.opencvdemo.repository.SnapshotRepo;
 import org.example.opencvdemo.repository.UserRepo;
 import org.opencv.core.*;
+import org.opencv.face.FaceRecognizer;
+import org.opencv.face.LBPHFaceRecognizer;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
+import org.opencv.utils.Converters;
 import org.opencv.videoio.VideoCapture;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +27,7 @@ import java.nio.file.Paths;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -67,21 +74,64 @@ public class CameraService {
     }
 
 
-    @Cacheable(value = "allSnapshots", key = "#userId + '-' + #examId")
+    @Cacheable(value = "allSnapshots")
     public List<Snapshot> getAll(){
         return snapshotRepo.findAll();
     }
 
     public List<Snapshot> getByUserId(Long userId){
+        List<Snapshot> snapshots = snapshotRepo.findByUserId(userId);
+        if(snapshots.isEmpty()){
+            throw new ApiRequestException("No snapshots found or invalid UserId");
+        }
         return snapshotRepo.findByUserId(userId);
     }
 
+    public void train (){
+            List<Mat> images = new ArrayList<>();
+            List<Integer> labels = new ArrayList<>();
+
+        File baseDir = new File("faces");
+
+        for(File file : baseDir.listFiles()){
+            int  label = Integer.parseInt(file.getName());
+
+            for(File imgFile : file.listFiles()){
+                Mat img = Imgcodecs.imread(imgFile.getAbsolutePath(),Imgcodecs.IMREAD_GRAYSCALE);
+                MatOfRect faces = new MatOfRect();
+                faceClassifier.detectMultiScale(img, faces);
+
+                Rect[] rects = faces.toArray();
+
+                if(rects.length > 0){
+                    Mat face = new Mat(img, rects[0]);
+                    Imgproc.resize(face,face,new Size(200,200));
+                    images.add(face);
+                    labels.add(label);
+                }
+
+
+            }
+        }
+
+        LBPHFaceRecognizer faceRecognizer= LBPHFaceRecognizer.create();
+        faceRecognizer.train(images, Converters.vector_int_to_Mat(labels));
+        faceRecognizer.write("trained_model.xml");
+
+        System.out.println("Training completed and model saved.");
+
+    }
+
+
+    @CacheEvict(value = "allSnapshots",allEntries = true)
     public String takeSnapshot(String username,Long examId) {
         System.out.println("Starting snapshot...");
         VideoCapture videoCapture = new VideoCapture(0);// Staring of camera usage
         User user = userRepo.findByUsername(username);
         String userId = user.getId().toString();
         String courseId = examId.toString();
+
+
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
@@ -116,8 +166,12 @@ public class CameraService {
             snapshot.setCourseId(courseId);
             snapshot.setFilePath(filePath);
             snapshot.setStatus(true);
+
             Mat faceDetected = frame;
             snapshot.setStatus(faceDetect(faceDetected));
+
+            snapshot.setFaceIdentity(checkFaceIdentity(frame));
+
 
             Mat sideEyeDetected = frame;
             snapshot.setStatus(eyeDetect(sideEyeDetected));
@@ -157,19 +211,80 @@ public class CameraService {
 
 
     //Detection of face numbers in the frame
-    public boolean   faceDetect(Mat frame) {
-        MatOfRect faceDetections = new MatOfRect(); //Face detection started
-        faceClassifier.detectMultiScale(frame, faceDetections);
+    public boolean faceDetect(Mat frame) {
+        LBPHFaceRecognizer recognizer = LBPHFaceRecognizer.create();
+        recognizer.read("trained_model.xml");
 
+        // Convert frame to grayscale for face detection and recognition
+        Mat grayFrame = new Mat();
+        Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+
+        MatOfRect faceDetections = new MatOfRect();
+        faceClassifier.detectMultiScale(grayFrame, faceDetections); // Use grayscale frame
 
         int facenum = faceDetections.toArray().length;
         System.out.println("Faces detected: " + facenum);
-        //If number of faces is bigger than 1 or no one appeared in the frame marks it as suspicious
-        if(facenum!=1) {
+
+        // If number of faces is bigger than 1 or no one appeared in the frame marks it as suspicious
+        if(facenum != 1) {
             for (Rect rect : faceDetections.toArray()) {
-                Imgproc.rectangle(frame, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 0, 255), 3);
+                Imgproc.rectangle(frame, new Point(rect.x, rect.y),
+                        new Point(rect.x + rect.width, rect.y + rect.height),
+                        new Scalar(0, 0, 255), 3);
             }
             return false;
+        }
+        // Extract face from grayscale image for recognition
+        Mat face = new Mat(grayFrame, faceDetections.toArray()[0]); // Use grayscale frame
+        Imgproc.resize(face, face, new Size(200, 200));
+
+        int[] label = new int[1];
+        double[] confidence = new double[1];
+
+        recognizer.predict(face, label, confidence); // Now using grayscale face
+        System.out.println("Predicted Label: " + label[0]);
+        System.out.println("Confidence: " + confidence[0]);
+
+        if (confidence[0] >70) {
+
+            System.out.println("Match not found: User ID ");
+            return false;
+        } else {
+            System.out.println("Match found");
+        }
+
+        return true;
+    }
+
+
+    public boolean checkFaceIdentity(Mat frame) {
+        LBPHFaceRecognizer recognizer = LBPHFaceRecognizer.create();
+        recognizer.read("trained_model.xml");
+
+        // Convert frame to grayscale for face detection and recognition
+        Mat grayFrame = new Mat();
+        Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+
+        MatOfRect faceDetections = new MatOfRect();
+        faceClassifier.detectMultiScale(grayFrame, faceDetections); // Use grayscale frame
+
+        // Extract face from grayscale image for recognition
+        Mat face = new Mat(grayFrame, faceDetections.toArray()[0]); // Use grayscale frame
+        Imgproc.resize(face, face, new Size(200, 200));
+
+        int[] label = new int[1];
+        double[] confidence = new double[1];
+
+        recognizer.predict(face, label, confidence); // Now using grayscale face
+        System.out.println("Predicted Label: " + label[0]);
+        System.out.println("Confidence: " + confidence[0]);
+
+        if (confidence[0] >80) {
+
+            System.out.println("Match not found: User ID ");
+            return false;
+        } else {
+            System.out.println("Match found");
         }
 
         return true;

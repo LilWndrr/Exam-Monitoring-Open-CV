@@ -27,6 +27,16 @@ public class Snapshot implements Serializable {
 
     private String courseId;
 
+    private boolean faceIdentity;
+
+    public boolean isFaceIdentity() {
+        return faceIdentity;
+    }
+
+    public void setFaceIdentity(boolean faceIdentity) {
+        this.faceIdentity = faceIdentity;
+    }
+
     public String getUUID() {
         return UUID;
     }

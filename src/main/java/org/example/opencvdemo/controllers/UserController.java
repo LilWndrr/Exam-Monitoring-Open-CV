@@ -20,11 +20,7 @@ import org.springframework.web.servlet.function.EntityResponse;
         this.userService = userService;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<String> create (@RequestBody RegisterRequest request) {
-        userService.createUser(request);
-        return ResponseEntity.ok("User created successfully");
-    }
+
 
 
     // Public endpoint, accessible to anyone

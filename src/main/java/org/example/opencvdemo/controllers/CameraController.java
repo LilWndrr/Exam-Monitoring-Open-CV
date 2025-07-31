@@ -37,7 +37,6 @@ public class CameraController {
 
     @GetMapping("admin/getAll")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-
     public  ResponseEntity<List<Snapshot>> getAll(){
         return ResponseEntity.ok(cameraService.getAll());
     }

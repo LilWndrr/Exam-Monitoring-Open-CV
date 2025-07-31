@@ -4,6 +4,7 @@ import org.example.opencvdemo.entity.Role;
 import org.example.opencvdemo.entity.User;
 import org.example.opencvdemo.repository.RoleRepo;
 import org.example.opencvdemo.repository.UserRepo;
+import org.example.opencvdemo.services.CameraService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,12 +18,13 @@ public class DataSeed implements CommandLineRunner {
 
     private final RoleRepo roleRepository;
 
-
+    private final CameraService cameraService;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public DataSeed(UserRepo userRepository, RoleRepo roleRepository, BCryptPasswordEncoder passwordEncoder) {
+    public DataSeed(UserRepo userRepository, RoleRepo roleRepository, CameraService cameraService, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.cameraService = cameraService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -46,6 +48,10 @@ public class DataSeed implements CommandLineRunner {
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode("adminpassword"));
         admin.setRoles(Set.of(adminRole));
-        userRepository.save(admin);*/
+        userRepository.save(admin);
+*/
+        cameraService.train();
+
+
     }
 }

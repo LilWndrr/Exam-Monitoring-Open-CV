@@ -16,6 +16,10 @@ public class User implements Serializable {
     private Long id;
 
     private String username;
+
+
+
+
     @JsonIgnore
     private String password;
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
