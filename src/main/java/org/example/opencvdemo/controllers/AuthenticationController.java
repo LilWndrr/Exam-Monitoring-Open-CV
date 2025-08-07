@@ -45,20 +45,19 @@ public class AuthenticationController {
     @PostMapping("/register")
     public ResponseEntity<String> register (@RequestBody RegisterRequest request) {
         userService.createUser(request,"ROLE_USER");
-        return ResponseEntity.ok("User created successfully");
+        return ResponseEntity.ok("User created Successfully");
     }
     @PostMapping("/admin/create")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> create (@RequestBody RegisterRequest request) {
         userService.createUser(request,"ROLE_ADMIN");
-        return ResponseEntity.ok("Admin created successfully");
+        return ResponseEntity.ok("Admin created Successfully");
     }
 
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest,
-                                                        HttpServletRequest request,
-                                                        HttpServletResponse response) {
+                                                        HttpServletRequest request) {
         try {
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
@@ -82,7 +81,7 @@ public class AuthenticationController {
             return ResponseEntity.ok( new AuthenticationResponse(session.getId(),SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString()));
 
         } catch (AuthenticationException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthenticationResponse());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new AuthenticationResponse());
         }
     }
 

@@ -30,7 +30,7 @@ public class UserService {
 
     public User createUser(RegisterRequest request, String role) {
         if(userRepo.findByUsername(request.getUsername()) != null) {
-            throw new RuntimeException("Username is already exist");
+            throw new ApiRequestException("Username already exists");
         }
         Set<Role> roles = new HashSet<>();
 
@@ -44,7 +44,6 @@ public class UserService {
         newUser.setUsername(request.getUsername());
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setRoles(roles);
-
 
 
         return userRepo.save(newUser);

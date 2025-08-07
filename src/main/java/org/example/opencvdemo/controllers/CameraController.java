@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.example.opencvdemo.services.CameraService;
 
@@ -22,16 +23,14 @@ import java.util.concurrent.ScheduledFuture;
 public class CameraController {
     private final CameraService cameraService;
     private final TaskScheduler taskScheduler;
-    private final SnapshotRepo snapshotRepo;
 
     private ScheduledFuture<?> scheduledTask;
 
     private volatile boolean isRunning = false;
 
-    public CameraController(CameraService cameraService, TaskScheduler taskScheduler, SnapshotRepo snapshotRepo) {
+    public CameraController(CameraService cameraService, TaskScheduler taskScheduler) {
         this.cameraService = cameraService;
         this.taskScheduler = taskScheduler;
-        this.snapshotRepo = snapshotRepo;
     }
 
 
@@ -44,15 +43,15 @@ public class CameraController {
     @GetMapping("admin/getByUserId")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
 
-    public ResponseEntity<List<Snapshot>> getByUserId(Long userId){
+    public ResponseEntity<List<Snapshot>> getByUserId(@RequestParam Long userId){
         return ResponseEntity.ok(cameraService.getByUserId(userId));
     }
 
 
-    @GetMapping("admin/getByUserIdAndExamAd")
+    @GetMapping("admin/getByUserIdAndExamId")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<Snapshot>> getByUserIdAndExamAd(Long userId, Long examAdId){
-        return ResponseEntity.ok(cameraService.getByUserIdAndExamId(userId,examAdId.toString()));
+    public ResponseEntity<List<Snapshot>> getByUserIdAndExamAd(Long userId, Long examId){
+        return ResponseEntity.ok(cameraService.getByUserIdAndExamId(userId,examId.toString()));
     }
 
 
@@ -76,11 +75,9 @@ public class CameraController {
             return ResponseEntity.ok("Is already running");
         }
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
         scheduledTask = taskScheduler.scheduleAtFixedRate(
-                ()-> cameraService.takeSnapshot(username,examId),1000
+                () -> cameraService.takeSnapshot(username, examId), 1000
         );
-
         isRunning = true;
         return ResponseEntity.ok("Started");
     }

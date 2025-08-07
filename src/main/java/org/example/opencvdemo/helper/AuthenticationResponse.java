@@ -1,5 +1,8 @@
 package org.example.opencvdemo.helper;
 
+import lombok.Builder;
+
+@Builder
 public class AuthenticationResponse {
 
     String sessionId;

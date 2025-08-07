@@ -1,15 +1,24 @@
 package org.example.opencvdemo.helper;
 
-import java.util.List;
+import lombok.Builder;
+import org.example.opencvdemo.entity.Role;
+
+import java.util.ArrayList;
 import java.util.Set;
 
+@Builder
 public class RegisterRequest {
 
     private String username;
     private String password;
 
 
-    public RegisterRequest(String username, String password, List<String> roles) {
+    public RegisterRequest(String username, String password, ArrayList<Role> roles) {
+        this.username = username;
+        this.password = password;
+
+    }
+    public RegisterRequest(String username, String password) {
         this.username = username;
         this.password = password;
 

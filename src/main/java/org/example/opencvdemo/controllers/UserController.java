@@ -45,7 +45,6 @@ import org.springframework.web.servlet.function.EntityResponse;
 
         @GetMapping("/admin/getById")
         @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-
         public ResponseEntity<User> getById (Long id) {
             return ResponseEntity.ok(userService.getUserById(id));
         }

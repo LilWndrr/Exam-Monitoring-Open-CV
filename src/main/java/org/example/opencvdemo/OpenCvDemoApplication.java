@@ -13,10 +13,19 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 public class OpenCvDemoApplication {
 
+    private static boolean isOpenCvLoaded = false;
+
     static {
-        System.load("C:\\Users\\Seyfullah\\Documents\\openCV1\\install\\java\\opencv_java4120.dll");
-       // System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        System.out.println("OpenCv Loaded Version:" + Core.VERSION);
+        if (!isOpenCvLoaded) {
+            try {
+                System.load("C:\\Users\\Seyfullah\\Documents\\openCV1\\install\\java\\opencv_java4120.dll");
+                isOpenCvLoaded = true;
+            } catch (UnsatisfiedLinkError e) {
+                if (!e.getMessage().contains("already loaded")) {
+                    throw e;
+                }
+            }
+        }
     }
 
     public static void main(String[] args) {

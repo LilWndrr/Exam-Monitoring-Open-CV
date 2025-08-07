@@ -1,5 +1,9 @@
 package org.example.opencvdemo.helper;
 
+
+import lombok.Builder;
+
+@Builder
 public class AuthenticationRequest {
 
     private String username;
